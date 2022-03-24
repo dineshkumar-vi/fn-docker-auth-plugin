@@ -1,0 +1,14 @@
+{
+    "Description": "Authorization plugin for Docker",
+    "Documentation": "",
+    "Entrypoint": [
+      "/bin/docker-authz-plugin"
+    ],
+  
+    "Interface": {
+      "Socket": "authz-plugin.sock",
+      "Types": [
+        "docker.authz/1.0"
+      ]
+    }
+  }
