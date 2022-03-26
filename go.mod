@@ -3,6 +3,7 @@ module github.com/fn/docker-authz-plugin
 go 1.18
 
 require (
+	github.com/docker/engine-api v0.4.0
 	github.com/docker/go-plugins-helpers v0.0.0-20200102110956-c9a8a2d92ccc
 	github.com/sirupsen/logrus v1.7.0
 )
