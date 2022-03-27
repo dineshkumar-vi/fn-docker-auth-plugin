@@ -2,14 +2,9 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"github.com/docker/engine-api/types"
+	"github.com/docker/engine-api/client"
 	"github.com/docker/go-plugins-helpers/authorization"
-	"io/ioutil"
-	"net"
-	"net/http"
-	"net/url"
+	"os"
 	"regexp"
 	"strings"
 )
@@ -31,31 +26,16 @@ var (
 
 func (p *plugin) AuthZReq(req authorization.Request) authorization.Response {
 
-	uri, err := url.QueryUnescape(req.RequestURI)
+	if strings.Contains(req.RequestURI, "/images/load") {
 
-	if err != nil {
-		return authorization.Response{Err: err.Error()}
+		tag, e := inspectAndDrop("demo")
+
+		if e != nil {
+			return authorization.Response{Err: e.Error()}
+		} else {
+			return authorization.Response{Err: tag}
+		}
 	}
-
-	// Remove query parameters
-	i := strings.Index(uri, "?")
-	if i > 0 {
-		uri = uri[:i]
-	}
-
-	fmt.Println("checking " + req.RequestMethod + " request to '" + uri + "' from user : " + req.User)
-	if req.RequestMethod == "DELETE" && deletePlugin.MatchString(uri) {
-		return authorization.Response{Err: "Permission Denied !"}
-	}
-
-	if req.RequestMethod == "POST" && disablePlugin.MatchString(uri) {
-		return authorization.Response{Err: "Permission Denied !"}
-	}
-
-	if req.RequestMethod == "GET" && strings.Contains(uri, "images") {
-
-	}
-
 	return authorization.Response{Allow: true}
 }
 
@@ -64,29 +44,22 @@ func (p *plugin) AuthZRes(req authorization.Request) authorization.Response {
 	return authorization.Response{Allow: true}
 }
 
-func inspectAndDrop(imageName string) (bool, error) {
-	httpc := http.Client{
-		Transport: &http.Transport{
-			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
-				return net.Dial("unix", "/var/run/docker.sock")
-			},
-		},
+func inspectAndDrop(imageName string) (string, error) {
+
+	var version string
+	if version = os.Getenv("DOCKER_API_VERSION"); version == "" {
+		version = "v1.41"
 	}
 
-	var response *http.Response
-	var err error
+	defaultHeaders := map[string]string{"User-Agent": "engine-api-cli:1.0"}
+	cli, err := client.NewClient("unix:///var/run/docker.sock", version, nil, defaultHeaders)
+	if err != nil {
+		return "", err
+	}
 
-	response, err = httpc.Get("http://unix" + "/images/" + imageName + "/json")
+	imagedetails, _, err := cli.ImageInspectWithRaw(context.Background(), "demo", false)
+	return imagedetails.ID, err
 
-	body, err := ioutil.ReadAll(response.Body)
-
-	var data types.ImageInspect
-	err = json.Unmarshal(body, &data)
-
-	c1 := isRepoValid(data.RepoTags)
-	c2 := strings.Contains(data.Config.User, "nsnbdy")
-	c3 := strings.Contains(data.Config.Labels["maintainer"], "fanniemae.com")
-	return c1 || c2 || c3, err
 }
 
 func isRepoValid(repo []string) bool {

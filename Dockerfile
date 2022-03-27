@@ -1,4 +1,4 @@
-FROM golang:1.15-buster as builder
+FROM golang:latest as builder
 WORKDIR /src
 COPY . .
 RUN make docker-authz-plugin

@@ -4,11 +4,22 @@
     "Entrypoint": [
       "/bin/docker-authz-plugin"
     ],
-  
     "Interface": {
       "Socket": "authz-plugin.sock",
       "Types": [
         "docker.authz/1.0"
       ]
-    }
+    },
+    "Mounts": [
+      {
+        "Name": "docker-sock",
+        "Source": "/var/run/docker.sock",
+        "Destination": "/var/run/docker.sock",
+        "Settable": null,
+        "Type": "bind",
+        "Options": [
+          "rbind"
+        ]
+      }
+    ]
   }

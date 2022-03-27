@@ -1,6 +1,6 @@
 SHELL=/bin/bash -o pipefail
 
-PLUGIN_NAME=fn/docker-authz-plugin
+PLUGIN_NAME=dineshviveck5/docker-authz-plugin
 PLUGIN_TAG=dev
 
 GO ?= go
@@ -27,7 +27,7 @@ create: plugin
 	$(DOCKER) plugin create "${PLUGIN_NAME}:${PLUGIN_TAG}" ./plugin
 
 .PHONY: enable
-install: 
+install:
 	$(DOCKER) plugin enable "${PLUGIN_NAME}:${PLUGIN_TAG}"
 
 .PHONY: clean
